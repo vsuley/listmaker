@@ -1,3 +1,4 @@
+from contentManager import *
 import curses
 import sys
 
@@ -23,6 +24,14 @@ class ScreenManager(object):
         self._screen.keypad(False)
         curses.endwin()
 
+
+    def render(self, cm: ContentManager):
+        l = cm.render_list()
+        for row in l:
+            entry = row.entry
+            self.add_line(entry.name, row.indent_lvl)
+        self.refresh()
+        self.reset_current()
 
     def refresh(self):
         self._screen.refresh()

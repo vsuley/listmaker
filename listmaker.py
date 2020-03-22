@@ -1,18 +1,18 @@
 #!/usr/bin/env python3
-import sys
-import time
 from contentManager import ContentManager
 from screenManager import ScreenManager
 from storageManager import StorageManager
+import sys
+import time
 
 def main(filepath):
     store = StorageManager(filepath)
     cm = ContentManager(store)
     sm = ScreenManager()
 
-    done = True
+    done = False
     while not done:
-        cm.render(sm)
+        sm.render(cm)
         wait_for_input()
     sys.exit(0)
 
