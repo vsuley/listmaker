@@ -9,28 +9,30 @@ import curses
 class ListMaker:
 
     def main(self, filepath):
-        self.store = StorageManager(filepath)
-        self.cm = ContentManager(self.store)
-        self.sm = ScreenManager()
+        try:
+            self.store = StorageManager(filepath)
+            self.cm = ContentManager(self.store)
+            self.sm = ScreenManager()
 
-        while True:
-            self.sm.render(cm)
-            key = sm.getkey()
-            self.process_key(key)
-
-    def process_ch(self, ch):
-        pass
+            while True:
+                content_rows = self.cm.render_list()
+                self.sm.render(content_rows)
+                key = self.sm.getkey()
+                self.process_key(key)
+        except:
+            curses.endwin()
+            print('Unexpected error: ', sys.exc_info())
 
 
     def process_key(self, key):
+        sm = self.sm
+        cm = self.cm
         if key == 'KEY_UP':
-            active_row = self.cm.traverse_up()
-            self.sm.place_cursor(active_row)
-            self.sm.refresh()
+            sm.update_active(cm.traverse_up())
+            sm.refresh()
         elif key == 'KEY_DOWN':
-            active_row = self.cm.traverse_down()
-            self.sm.place_cursor(active_row)
-            self.sm.refresh()
+            sm.update_active(cm.traverse_down())
+            sm.refresh()
         elif key == 'KEY_LEFT':
             pass
         elif key == 'KEY_RIGHT':

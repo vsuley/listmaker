@@ -1,4 +1,3 @@
-from contentManager import *
 import curses
 import sys
 
@@ -8,45 +7,61 @@ class ScreenManager(object):
         self._screen = curses.initscr()
         self._screen.keypad(True)
         curses.noecho()
+        self._orig_cursor = curses.curs_set(0)
 
         # default layout
+        self.left_margin = 4
         self.indent_size = 4
         self.bcb_row = 0
         self.bcb_height = 3
         self.title_row = self.bcb_row + self.bcb_height
         self.title_height = 3
+        self.active_col = 0
+
+        # Conveniences
         self.content_start =  self.title_height + self.title_row
-        self.curr_row = self.content_start
+
+        # Starting values
+        self.active_row = 0
 
 
     def __del__(self):
+        curses.curs_set(self._orig_cursor)
         curses.echo()
         self._screen.keypad(False)
         curses.endwin()
+        print('Screen manager says goodbye')
 
 
-    def render(self, cm: ContentManager):
-        l = cm.render_list()
-        for row in l:
-            entry = row.entry
-            self.add_line(entry.name, row.indent_lvl)
+    def render(self, content_rows: list):
+        row_num = self.content_start
+        for r in content_rows:
+            self._add_line(r.entry.name, row_num, r.indent_lvl)
+            row_num += 1
         self.refresh()
-        self.reset_current()
+
 
     def refresh(self):
         self._screen.refresh()
 
 
-    def add_line(self, line: str, indent_lvl: int):
-        col = indent_lvl * self.indent_size
-        row = self.curr_row
-        self._screen.addstr(row, col, line)
-        self.curr_row += 1
+    def update_active(self, row: int):
+        # Clean previous glyph
+        y = self.active_row + self.content_start
+        x = self.active_col
+        self._screen.addstr(y, x, ' ')
+        # Update active row
+        self.active_row = row
+        # Apply glyph to new active row 
+        y = self.active_row + self.content_start
+        x = self.active_col
+        self._screen.addstr(y, x, '>')
+
+        
+    def _add_line(self, name: str, row: int, indent_lvl: int):
+        col = self.left_margin + indent_lvl * self.indent_size
+        self._screen.addstr(row, col, name)
     
-
-    def reset_current(self):
-        self.curr_row = self.content_start
-
 
     def getkey(self):
         return self._screen.getkey()
@@ -54,13 +69,4 @@ class ScreenManager(object):
 
     def getch(self):
         return self._screen.getch()
-
-
-    def place_cursor(self, row: int, col: int = 0):
-        offset = self.content_start
-        self._screen.move(row + offset, 0)
-
-
-    def display_check(self):
-        self._screen.addstr(0, 0, 'x')
 
