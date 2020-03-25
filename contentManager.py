@@ -30,6 +30,27 @@ class ContentManager:
         return self.content_list
 
 
+    def traverse_up(self) -> int:
+        if self.active_row > 0:
+            self.active_row -= 1
+        return self.active_row
+
+
+    def traverse_down(self) -> int:
+        last_row = len(self.content_list) - 1
+        if self.active_row < last_row:
+            self.active_row += 1
+        return self.active_row
+            
+
+    def traverse_right(self) -> int:
+        pass
+
+
+    def traverse_left(self) -> int:
+        pass
+
+
 class ContentRow:
     '''Represents a single row of content'''
 

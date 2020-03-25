@@ -48,6 +48,19 @@ class ScreenManager(object):
         self.curr_row = self.content_start
 
 
+    def getkey(self):
+        return self._screen.getkey()
+
+
+    def getch(self):
+        return self._screen.getch()
+
+
+    def place_cursor(self, row: int, col: int = 0):
+        offset = self.content_start
+        self._screen.move(row + offset, 0)
+
+
     def display_check(self):
         self._screen.addstr(0, 0, 'x')
 
