@@ -1,7 +1,10 @@
+from typing import List, Tuple
 from entry import Entry
+from contentRow import ContentRow
 from anytree import RenderTree
 from storageManager import StorageManager
 import sys
+
 
 class ContentManager:
     '''This class manages the content for the listMaker
@@ -16,31 +19,31 @@ class ContentManager:
             c = Entry('Topic 02', self.root)
         if(self.root.children == None):
             a = Entry(' ', self.root)
-        self.render_list()
-        self.active_row = 0
+        self.selected_row = 0
+        self.render()
 
 
-    def render_list(self) -> list:
+    def render(self) -> Tuple[List[ContentRow], int]:
         cl = list()
         for pre, _, entry in RenderTree(self.root):
             indent_lvl = int(len(pre) / 4)
-            row = ContentRow(entry, indent_lvl, False)
+            row = ContentRow(entry, indent_lvl)
             cl.append(row)
         self.content_list = cl
-        return self.content_list
+        return (self.content_list, self.selected_row)
 
 
     def traverse_up(self) -> int:
-        if self.active_row > 0:
-            self.active_row -= 1
-        return self.active_row
+        if self.selected_row > 0:
+            self.selected_row -= 1
+        return self.selected_row
 
 
     def traverse_down(self) -> int:
         last_row = len(self.content_list) - 1
-        if self.active_row < last_row:
-            self.active_row += 1
-        return self.active_row
+        if self.selected_row < last_row:
+            self.selected_row += 1
+        return self.selected_row
             
 
     def traverse_right(self) -> int:
@@ -51,13 +54,19 @@ class ContentManager:
         pass
 
 
-class ContentRow:
-    '''Represents a single row of content'''
+    def add_child(self) -> Tuple[List[ContentRow], int]:
+        cr = self.content_list[self.selected_row]
+        e = cr.entry
+        child = Entry('new Child', e)
+        self.render()
+        #pos = self.find_entry_pos(child)       
+        self.selected_row = 0
+        return (self.content_list, self.selected_row)
 
-    def __init__(self, 
-                 entry: Entry, 
-                 indent_lvl: int,
-                 temp: bool):
-        self.entry = entry
-        self.indent_lvl = indent_lvl
-        self.temp = temp
+    
+    def find_entry_pos(self, ent: Entry) -> int:
+        row = (x for x in self.content_list if x.entry == ent)
+        pos = self.content_list.index(row)
+        return pos
+
+

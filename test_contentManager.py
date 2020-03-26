@@ -10,5 +10,8 @@ def test_create_and_save():
     cm = ContentManager()
     filename = time.ctime() + '.lm'
 
+
+def add_child()
+
 if __name__ == '__main__':
     test_creation()

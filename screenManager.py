@@ -1,72 +1,64 @@
+from typing import List, Tuple
+from contentRow import ContentRow
+from childWindows import NavWnd, AnnoWnd, ContentWnd, StatusWnd
 import curses
 import sys
 
 class ScreenManager(object):
+
     
     def __init__(self):
-        self._screen = curses.initscr()
-        self._screen.keypad(True)
+        curses.initscr()
+        # Layout basics
+        self.indent_size = 4
+        self.nav_height = 5
+        self.annotations_width = 6
+        self.status_height = 3
+        # Navigation window
+        self.nav_wnd = NavWnd(self.nav_height, curses.COLS, 0, 0)
+        # Annotations window
+        anno_height = curses.LINES - self.nav_height - self.status_height - 1
+        anno_y = self.nav_height
+        anno_x = 0
+        self.anno_wnd = AnnoWnd(anno_height, self.annotations_width, anno_y, anno_x)
+        # Main Content window
+        content_width = curses.COLS - self.annotations_width
+        content_height = curses.LINES - self.nav_height - self.status_height - 1
+        content_y = self.nav_height
+        content_x = self.annotations_width
+        self.content_wnd = ContentWnd(content_height, content_width, content_y, content_x)
+        # Status Window
+        status_width = curses.COLS
+        status_y = curses.LINES - self.status_height - 1
+        self.status_wnd = StatusWnd(self.status_height, status_width, status_y, 0)
+        # Curses settings
         curses.noecho()
         self._orig_cursor = curses.curs_set(0)
-
-        # default layout
-        self.left_margin = 4
-        self.indent_size = 4
-        self.bcb_row = 0
-        self.bcb_height = 3
-        self.title_row = self.bcb_row + self.bcb_height
-        self.title_height = 3
-        self.active_col = 0
-
-        # Conveniences
-        self.content_start =  self.title_height + self.title_row
-
-        # Starting values
-        self.active_row = 0
 
 
     def __del__(self):
         curses.curs_set(self._orig_cursor)
         curses.echo()
-        self._screen.keypad(False)
         curses.endwin()
-        print('Screen manager says goodbye')
 
 
-    def render(self, content_rows: list):
-        row_num = self.content_start
-        for r in content_rows:
-            self._add_line(r.entry.name, row_num, r.indent_lvl)
-            row_num += 1
-        self.refresh()
+    def update_content(self, content: Tuple[List[ContentRow], int]):
+        self.content_wnd.update_content(content[0])
+        self.anno_wnd.update_selected(content[1])
 
 
-    def refresh(self):
-        self._screen.refresh()
-
-
-    def update_active(self, row: int):
-        # Clean previous glyph
-        y = self.active_row + self.content_start
-        x = self.active_col
-        self._screen.addstr(y, x, ' ')
-        # Update active row
-        self.active_row = row
-        # Apply glyph to new active row 
-        y = self.active_row + self.content_start
-        x = self.active_col
-        self._screen.addstr(y, x, '>')
-
+    def update_selected(self, row: int):
+        self.anno_wnd.update_selected(row)
         
-    def _add_line(self, name: str, row: int, indent_lvl: int):
-        col = self.left_margin + indent_lvl * self.indent_size
-        self._screen.addstr(row, col, name)
-    
+
+    def update_status(self, status: str):
+        self.status_wnd.update_status(status)
+
 
     def getkey(self):
-        return self._screen.getkey()
+        return self.content_wnd.getkey()
 
 
     def getch(self):
-        return self._screen.getch()
+        return self.content_wnd.getch()
 
