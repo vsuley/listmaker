@@ -8,6 +8,7 @@ import os
 import time
 import curses
 import traceback
+import string
 
 class Modes(Enum):
     EDIT = 1
@@ -20,6 +21,7 @@ class ListMaker:
         self.store = None
         self.cm = None
         self.sm = None
+        self.em: EditManager = None
         self.mode = Modes.NORMAL 
         os.environ.setdefault('ESCDELAY', '25')
     
@@ -29,13 +31,13 @@ class ListMaker:
             self.cm = ContentManager(self.store)
             self.sm = ScreenManager()
             self.sm.update_status('Normal Mode')
+            content = self.cm.render()
+            self.sm.update_content(content)
             while True:
-                content = self.cm.render()
-                self.sm.update_content(content)
-                ch = self.sm.getch()
-                self.process_ch(ch)
-                key = self.sm.getkey()
-                self.process_key(key)
+                if self.mode == Modes.NORMAL:
+                    self.normal_loop()
+                elif self.mode == Modes.EDIT:
+                    self.edit_loop()
         except:
             curses.endwin()
             print('Exception in application')
@@ -44,48 +46,89 @@ class ListMaker:
             print('-'*50)
 
 
-    def process_ch(self, ch):
+    def normal_loop(self):
         sm = self.sm
         cm = self.cm
-        if ch == 27:
-           # Escape key
-           if self.mode == Modes.EDIT:
-               self.mode = Modes.NORMAL
-               sm.update_status('Normal Mode')
-        else:
-            curses.ungetch(ch)
+        key = self.process_input()
+        if key == 'KEY_DOWN' or key == 'j':
+            sm.update_selected(cm.traverse_down())
+        elif key == 'KEY_UP' or key == 'k':
+            sm.update_selected(cm.traverse_up())
+        elif key == 'c':
+            self.add_child()
+        elif key == 's':
+            self.store.write(self.cm.root)
+        elif key == 'e':
+            self.start_edit()
+            return
+        content = self.cm.render()
+        self.sm.update_content(content)
 
 
-    def process_key(self, key):
-        sm = self.sm
-        cm = self.cm
-        
-        if (self.mode == Modes.NORMAL):
-            if key == 'KEY_LEFT' or key == 'h':
-                pass
-            elif key == 'KEY_DOWN' or key == 'j':
-                sm.update_selected(cm.traverse_down())
-            elif key == 'KEY_UP' or key == 'k':
-                sm.update_selected(cm.traverse_up())
-            elif key == 'KEY_RIGHT' or key == 'l':
-                pass
-            elif key == 'c':
-                self.add_child()
-            elif key == 's':
-                self.store.write(self.cm.root)
-            elif key == 'e':
-                self.mode = Modes.EDIT
-                self.sm.update_status('Edit Mode')
-            else:
-                pass
-        elif (self.mode == Modes.EDIT):
-            pass
+    def edit_loop(self):
+        key = self.process_input()
+        if key == 'KEY_LEFT':
+            target = self.cm.traverse_left()
+            self.sm.show_cursor(target)
+        elif key == 'KEY_RIGHT':
+            target = self.cm.traverse_right()
+            self.sm.show_cursor(target)
+        elif key == 'Escape':
+            self.end_edit()
+        elif key == 'KEY_BACKSPACE':
+            target = self.cm.backspace()
+            self.sm.update_line(target)
+            self.sm.show_cursor(target)
+        elif key == 'KEY_DC':
+            target = self.cm.del_char()
+            self.sm.update_line(target)
+            self.sm.show_cursor(target)
+        elif key in string.printable:
+            target = self.cm.insert(key)
+            self.sm.update_line(target)
+            self.sm.show_cursor(target)
+
 
     def add_child(self):
         cm = self.cm
         sm = self.sm
         content = cm.add_child()
         sm.update_content(content)
+
+
+    def start_edit(self):
+        self.mode = Modes.EDIT
+        self.sm.update_status('Edit Mode')
+        edit_target = self.cm.get_selected_row()
+        self.sm.show_cursor(edit_target)
+
+    def end_edit(self):
+        self.mode = Modes.NORMAL
+        self.sm.update_status('Normal Mode')
+        self.sm.hide_cursor()
+
+
+    def process_input(self):
+        ch = self.sm.getch()
+        result = self.process_ch(ch)
+        if result == None:
+            result = self.sm.getkey()
+        #print(result)
+        return result
+
+
+    def process_ch(self, ch) -> str:
+        sm = self.sm
+        cm = self.cm
+        if ch == 27:
+            # Escape key
+            return 'Escape'
+        elif ch == 8:
+            # Backspace key
+            return 'Backspace'
+        else:
+            curses.ungetch(ch)
+        return None
 
 
 if __name__ == '__main__':

@@ -55,6 +55,18 @@ class ScreenManager(object):
         self.status_wnd.update_status(status)
 
 
+    def show_cursor(self, target: Tuple[int, ContentRow]):
+        curses.curs_set(1)
+        self.content_wnd.move_cursor(target)
+
+
+    def update_line(self, target: Tuple[int, ContentRow]):
+        self.content_wnd.update_line(target)
+
+    def hide_cursor(self):
+        curses.curs_set(0)
+
+
     def getkey(self):
         return self.content_wnd.getkey()
 

@@ -1,5 +1,6 @@
 from contentRow import ContentRow
-from typing import List
+from entry import Entry
+from typing import List, Tuple
 import curses
 import sys
 
@@ -26,6 +27,7 @@ class AnnoWnd:
 
 
 class ContentWnd:
+
     def __init__(self, lines: int, cols: int, begin_y: int, begin_x: int) -> None:
         self.wnd = curses.newwin(lines, cols, begin_y, begin_x)
         self.wnd.keypad(True)
@@ -39,7 +41,6 @@ class ContentWnd:
             x = content_row.indent_lvl * self.indent_size
             self.wnd.addstr(y, x, text)
             y += 1
-        #self.wnd.border(0, 0, 0, 0, 0, 0, 0, 0)
         self.wnd.refresh()
    
 
@@ -49,6 +50,25 @@ class ContentWnd:
 
     def getkey(self):
         return self.wnd.getkey()
+
+
+    def move_cursor(self, target: Tuple[int, ContentRow]):
+        y = target[0]
+        cr = target[1]
+        entry = cr.entry
+        x = entry.curs + (cr.indent_lvl * self.indent_size)
+        self.wnd.move(y, x)
+
+
+    def update_line(self, target: Tuple[int, ContentRow]):
+        y = target[0]
+        cr = target[1]
+        x = cr.indent_lvl * self.indent_size
+        self.wnd.move(y, x)
+        self.wnd.clrtoeol()
+        self.wnd.addstr(y, x, cr.entry.name)
+        self.wnd.move(y, x)
+        self.wnd.refresh()
 
 
 class StatusWnd:

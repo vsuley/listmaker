@@ -46,27 +46,55 @@ class ContentManager:
         return self.selected_row
             
 
-    def traverse_right(self) -> int:
-        pass
-
-
-    def traverse_left(self) -> int:
-        pass
-
-
     def add_child(self) -> Tuple[List[ContentRow], int]:
         cr = self.content_list[self.selected_row]
         e = cr.entry
         child = Entry('new Child', e)
         self.render()
-        #pos = self.find_entry_pos(child)       
-        self.selected_row = 0
+        self.selected_row = self.find_entry_pos(child)       
         return (self.content_list, self.selected_row)
 
     
+    def get_selected_row(self) -> Tuple[int, ContentRow]:
+        return (self.selected_row, self.content_list[self.selected_row])
+
+
+    def traverse_right(self) -> Tuple[int, ContentRow]:
+        self.content_list[self.selected_row].entry.curs_right()
+        return (self.selected_row, self.content_list[self.selected_row])
+
+
+    def traverse_left(self) -> Tuple[int, ContentRow]:
+        self.content_list[self.selected_row].entry.curs_left()
+        return (self.selected_row, self.content_list[self.selected_row])
+
+
+    def backspace(self) -> Tuple[int, ContentRow]:
+        self.content_list[self.selected_row].entry.backspace()
+        return (self.selected_row, self.content_list[self.selected_row])
+
+
+    def del_char(self) -> Tuple[int, ContentRow]:
+        self.content_list[self.selected_row].entry.del_char()
+        return (self.selected_row, self.content_list[self.selected_row])
+
+
+    def insert(self, char) -> Tuple[int, ContentRow]:
+        entry = self.content_list[self.selected_row].entry
+        entry.insert(char)
+        return (self.selected_row, self.content_list[self.selected_row])
+
+
+    def delete(self) -> Tuple[List[ContentRow], int]:
+        return (self.content_list, self.selected_row)
+
+
     def find_entry_pos(self, ent: Entry) -> int:
-        row = (x for x in self.content_list if x.entry == ent)
-        pos = self.content_list.index(row)
-        return pos
+        pos = 0
+        for x in self.content_list:
+            if x.entry == ent:
+                return pos
+            pos += 1
+        return -1
 
 
