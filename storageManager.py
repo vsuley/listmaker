@@ -1,7 +1,7 @@
 from anytree import Node
 from entry import Entry
 from anytree.exporter import JsonExporter
-from anytree.importer import JsonImporter
+from anytree.importer import JsonImporter, DictImporter
 from pathlib import Path
 import sys
 import os
@@ -17,7 +17,8 @@ class StorageManager(object):
        content = None
        if os.path.isfile(self._filepath):
            fp = open(Path(self._filepath))
-           importer = JsonImporter()
+           d_imp = DictImporter(nodecls = Entry)
+           importer = JsonImporter(dictimporter = d_imp)
            content = importer.import_(fp.read())
            fp.close()
        return content

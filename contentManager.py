@@ -49,9 +49,20 @@ class ContentManager:
     def add_child(self) -> Tuple[List[ContentRow], int]:
         cr = self.content_list[self.selected_row]
         e = cr.entry
-        child = Entry('new Child', e)
+        child = Entry('', e)
         self.render()
         self.selected_row = self.find_entry_pos(child)       
+        return (self.content_list, self.selected_row)
+
+
+    def add_sibling(self) -> Tuple[List[ContentRow], int]:
+        cr = self.content_list[self.selected_row]
+        e = cr.entry
+        if e != self.root:
+            p = e.parent
+            child = Entry('', e)
+            self.render()
+            self.selected_row = self.find_entry_pos(child)       
         return (self.content_list, self.selected_row)
 
     
