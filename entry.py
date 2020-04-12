@@ -7,8 +7,8 @@ class Entry(NodeMixin):
                  parent = None, 
                  decorations: list = None, 
                  text: str = None,
-                 children = None):
-        super(Entry, self).__init__()
+                 children = None,
+                 curs: int = 0):
         self.name = name
         self.parent = parent
         if decorations:
@@ -17,7 +17,7 @@ class Entry(NodeMixin):
             self.text = text
         if children:
             self.children = children
-        self.curs = 0
+        self.curs = curs
 
 
     def insert(self, char):
@@ -41,7 +41,7 @@ class Entry(NodeMixin):
             self.curs = len(self.name)
 
     def curs_right(self):
-        if self.curs == len(self.name):
+        if self.curs == len(self.name) - 1:
             return
         self.curs += 1
 
