@@ -60,12 +60,32 @@ class ContentManager:
         e = cr.entry
         if e != self.root:
             p = e.parent
-            child = Entry('', e)
+            child = Entry('', p)
             self.render()
             self.selected_row = self.find_entry_pos(child)       
         return (self.content_list, self.selected_row)
 
     
+    def delete_node(self) -> Tuple[List[ContentRow], int]:
+        cr = self.content_list[self.selected_row]
+        e = cr.entry
+        p = e.parent
+        if e == self.root:
+            # Can't do
+            return (self.content_list, self.selected_row)
+        if len(e.children) > 0:
+            # Reassign children to node's parent.
+            for x in e.children:
+                x.parent = p
+        if self.selected_row == len(self.content_list) - 1:
+            # If selection is at last row, we'll need to move it up
+            self.selected_row -= 1
+        # The following line removes the node
+        e.parent = None
+        self.render()
+        return (self.content_list, self.selected_row)
+
+
     def get_selected_row(self) -> Tuple[int, ContentRow]:
         return (self.selected_row, self.content_list[self.selected_row])
 

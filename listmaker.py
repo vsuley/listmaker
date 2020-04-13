@@ -9,14 +9,13 @@ import time
 import curses
 import traceback
 import string
+import logging
 
 class Modes(Enum):
     EDIT = 1
     NORMAL = 2
 
 class ListMaker:
-    
-    
     def __init__(self):
         self.store = None
         self.cm = None
@@ -24,6 +23,7 @@ class ListMaker:
         self.em: EditManager = None
         self.mode = Modes.NORMAL 
         os.environ.setdefault('ESCDELAY', '25')
+        logging.basicConfig(filename='app.log', level = logging.DEBUG)
     
     def main(self, filepath):
         try:
@@ -55,14 +55,20 @@ class ListMaker:
         elif key == 'KEY_UP' or key == 'k':
             sm.update_selected(cm.traverse_up())
         elif key == 'c':
-            self.add_child()
+            content = self.cm.add_child()
+            self.sm.update_content(content)
+            self.start_edit()
         elif key == 's':
             self.store.write(self.cm.root)
         elif key == 'e':
             self.start_edit()
-            return
-        content = self.cm.render()
-        self.sm.update_content(content)
+        elif key == 'Enter' or key == 'b':
+            content = self.cm.add_sibling()
+            self.sm.update_content(content)
+            self.start_edit()
+        elif key == 'd':
+            content = self.cm.delete_node()
+            self.sm.update_content(content)
 
 
     def edit_loop(self):
@@ -83,17 +89,14 @@ class ListMaker:
             target = self.cm.del_char()
             self.sm.update_line(target)
             self.sm.show_cursor(target)
+        elif key == 'Enter':
+            self.end_edit()
+            self.sm.update_content(self.cm.add_sibling())
+            self.start_edit()
         elif key in string.printable:
             target = self.cm.insert(key)
             self.sm.update_line(target)
             self.sm.show_cursor(target)
-
-
-    def add_child(self):
-        cm = self.cm
-        sm = self.sm
-        content = cm.add_child()
-        sm.update_content(content)
 
 
     def start_edit(self):
@@ -113,19 +116,19 @@ class ListMaker:
         result = self.process_ch(ch)
         if result == None:
             result = self.sm.getkey()
-        #print(result)
         return result
 
 
     def process_ch(self, ch) -> str:
-        sm = self.sm
-        cm = self.cm
         if ch == 27:
             # Escape key
             return 'Escape'
         elif ch == 8:
             # Backspace key
             return 'Backspace'
+        elif ch == 10:
+            # Enter key
+            return 'Enter'
         else:
             curses.ungetch(ch)
         return None
