@@ -20,7 +20,6 @@ class ListMaker:
         self.store = None
         self.cm = None
         self.sm = None
-        self.em: EditManager = None
         self.mode = Modes.NORMAL 
         os.environ.setdefault('ESCDELAY', '25')
         logging.basicConfig(filename='app.log', level = logging.DEBUG)
