@@ -101,11 +101,13 @@ class ContentManager:
         sel_node = sel_row.entry
         move_row = self.content_list[move_row]
         move_node = move_row.entry
-        if (sel_node in move_node.descendants) or sel_node == move_node:
+        if (sel_node in move_node.descendants) or sel_node == move_node or sel_node == self.root:
             return (self.content_list, self.selected_row)
-        move_node.parent.children.remove(move_node)
-        index = sel_node.parent.children.index(sel_node)
-        sel_node.parent.children.insert(index, move_node)
+        move_node.parent = None
+        child_list = list(sel_node.parent.children)
+        index = child_list.index(sel_node)
+        child_list.insert(index, move_node)
+        sel_node.parent.children = child_list
         self.render()
         return (self.content_list, self.selected_row)
 
