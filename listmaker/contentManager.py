@@ -1,9 +1,8 @@
 from typing import List, Tuple
+from anytree import RenderTree
 from entry import Entry
 from contentRow import ContentRow
-from anytree import RenderTree
 from storageManager import StorageManager
-import sys
 
 
 class ContentManager:
@@ -82,6 +81,82 @@ class ContentManager:
             self.selected_row -= 1
         # The following line removes the node
         e.parent = None
+        self.render()
+        return (self.content_list, self.selected_row)
+
+
+    def move_node(self, move_row: int) -> Tuple[List[ContentRow], int]:
+        """
+        Moves the specified row before currently selected position,
+        this includes being able to move to a different parent. The
+        row being moved will be made sibling to currently selected
+        row. Cannot be moved to root. Cannot be moved to descendant.
+
+        Return:
+            A tuple where first element is a list of content rows
+            and second element is the indiex of currently selected
+            row.
+        """
+        sel_row = self.content_list[self.selected_row]
+        sel_node = sel_row.entry
+        move_row = self.content_list[move_row]
+        move_node = move_row.entry
+        if (sel_node in move_node.descendants) or sel_node == move_node:
+            return (self.content_list, self.selected_row)
+        move_node.parent.children.remove(move_node)
+        index = sel_node.parent.children.index(sel_node)
+        sel_node.parent.children.insert(index, move_node)
+        self.render()
+        return (self.content_list, self.selected_row)
+
+
+    def promote_node(self) -> Tuple[List[ContentRow], int]:
+        """
+        Promotes (unindents) the currently selected node. In effect,
+        promotion is moving a node up a level so that its grandparent
+        would now be its parent.
+
+        Returns:
+            A tuple where first element is a list of content rows
+            and second element is the index of the currently selected
+            row.
+        """
+
+        cr = self.content_list[self.selected_row]
+        e = cr.entry
+        p = e.parent
+        if p == self.root or e == self.root:
+            # Can't do
+            return (self.content_list, self.selected_row)
+        grandparent = p.parent
+        e.parent = grandparent
+        self.render()
+        return (self.content_list, self.selected_row)
+
+
+    def demote_node(self) -> Tuple[List[ContentRow], int]:
+        """
+        Demotes (indents) the currently selected node. The logic in
+        demote works a little different from promote because while
+        they appear symmetric in terms of lines displayed, within the
+        Tree space these are asymmetric operations. Demote will eval-
+        uate the node in the line above and see if the selected node
+        can be made a child of that
+
+        Returns:
+            A tuple where first element is a list of content rows
+            and second element is the index of the currently selected
+            row.
+        """
+
+        cr = self.content_list[self.selected_row]
+        e = cr.entry
+        p = e.parent
+        if p == self.root or e == self.root:
+            # Can't do
+            return (self.content_list, self.selected_row)
+        grandparent = p.parent
+        e.parent = grandparent
         self.render()
         return (self.content_list, self.selected_row)
 

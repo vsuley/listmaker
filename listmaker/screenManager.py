@@ -5,8 +5,6 @@ import curses
 import sys
 
 class ScreenManager(object):
-
-    
     def __init__(self):
         curses.initscr()
         # Layout basics
@@ -44,15 +42,6 @@ class ScreenManager(object):
 
     def update_content(self, content: Tuple[List[ContentRow], int]):
         self.content_wnd.update_content(content[0])
-        self.anno_wnd.update_selected(content[1])
-
-
-    def update_selected(self, row: int):
-        self.anno_wnd.update_selected(row)
-        
-
-    def update_status(self, status: str):
-        self.status_wnd.update_status(status)
 
 
     def show_cursor(self, target: Tuple[int, ContentRow]):

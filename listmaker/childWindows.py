@@ -1,6 +1,6 @@
+from typing import List, Tuple
 from contentRow import ContentRow
 from entry import Entry
-from typing import List, Tuple
 import curses
 import sys
 
@@ -9,13 +9,32 @@ class AnnoWnd:
     def __init__(self, lines: int, cols: int, begin_y: int, begin_x: int) -> None:
         self.wnd = curses.newwin(lines, cols, begin_y, begin_x)
         self.wnd.keypad(True)
+        # Selection related annotation details
         self.selected_mrk = '>'
-        self.selected_mrk_col = 0
+        self.selected_mrk_col = 3
         self.selected_mrk_row = 0
-        self.edit_mrk_col = 1
-        self.collapse_mrk_col = 2
+        # Moving related annotation details
+        self.move_mrk_col = 0
+        self.move_item_mrk = '●'
+        self.move_dest_mrk = '◘'
+        self.move_dest_row = None
+        self.move_item_row = None
+        self.collapse_mrk_col = 1
     
-    def update_selected(self, sel_row: int) -> None:
+    def update_selected(self, sel_row: int, mode: str) -> None:
+        """
+        This method paints a pointer that helps to show the user which row the
+        app currently considers 'selected'.
+
+        Keyword arguments:
+            sel_row: int -- The row to be highlighted
+            mode: str -- 'normal', 'edit' or 'move'
+        """
+        if mode == 'edit':
+            # self.selected_mrk = '}'#'►'
+            self.selected_mrk = '►'
+        else:
+            self.selected_mrk = '>'
         x = self.selected_mrk_col
         # Erase previous annotation
         y = self.selected_mrk_row
@@ -23,6 +42,47 @@ class AnnoWnd:
         # Set new annotation
         y = self.selected_mrk_row = sel_row
         self.wnd.addstr(y, x, self.selected_mrk)
+        self.wnd.refresh()
+
+
+    def update_move_item(self, row: int) -> None:
+        """This method paints a marker in the move annotations column
+        to mark the position of the item being moved.
+
+        Arguments:
+            row -- The row number (0 based) where you want to paint
+                   the mark
+        """
+        x = self.move_mrk_col
+        y = self.move_item_row = row
+        self.wnd.addstr(y, x, self.move_item_mrk)
+        self.wnd.refresh()
+
+
+    def update_move_dest(self, row: int) -> None:
+        """This method paints a marker in the move annotations column
+        to mark the position of where the item is being moved.
+
+        Arguments:
+            row -- Row being considered as a destination for move.
+        """
+        x = self.move_mrk_col
+        y = self.move_dest_row = row
+        self.wnd.addstr(y, x, self.move_dest_mrk)
+        self.wnd.refresh()
+
+
+    def clear_move(self) -> None:
+        """This method clears any move related marks."""
+        x = self.move_mrk_col
+        if self.move_item_row:
+            y = self.move_item_row
+            self.wnd.addstr(y, x, ' ')
+            self.move_item_row = None
+        if self.move_dest_row:
+            y = self.move_dest_row
+            self.wnd.addstr(y, x, ' ')
+            self.move_dest_row = None
         self.wnd.refresh()
 
 
