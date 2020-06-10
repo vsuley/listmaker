@@ -1,8 +1,11 @@
 #!/usr/bin/env python3
+"""
+Author: Vinayak Suley
+URL: https://github.com/vsuley/listmaker
+"""
 import sys
 import os
 import curses
-import traceback
 import string
 import logging
 from enum import Enum
@@ -12,6 +15,9 @@ from screenManager import ScreenManager
 from storageManager import StorageManager
 
 class Modes(Enum):
+    """
+    Helper class to manage modes for the application.
+    """
     EDIT = 1
     NORMAL = 2
     MOVE = 3
@@ -23,6 +29,10 @@ class ListMaker:
         self.sm = None
         self.mode = Modes.NORMAL
         self.state = dict()
+        self.mode_strs = {
+            Modes.EDIT:'Edit Mode',
+            Modes.NORMAL:'Normal Mode',
+            Modes.MOVE:'Move Mode'}
         os.environ.setdefault('ESCDELAY', '25')
         logging.basicConfig(filename='app.log', level=logging.DEBUG)
 
@@ -32,10 +42,12 @@ class ListMaker:
             self.store = StorageManager(filepath)
             self.cm = ContentManager(self.store)
             self.sm = ScreenManager()
-            self.sm.status_wnd.update_status('Normal Mode')
             content = self.cm.render()
             self.sm.update_content(content)
             while True:
+                self.sm.status_wnd.update_status(
+                    self.mode_strs[self.mode],
+                    self.cm.dirty)
                 if self.mode == Modes.NORMAL:
                     self.normal_loop()
                 elif self.mode == Modes.EDIT:
@@ -44,6 +56,7 @@ class ListMaker:
                     self.move_loop()
         finally:
             curses.endwin()
+            #TODO: Only use logging.exception if there is an actual exception.
             logging.exception(date.today())
             print('Exception in application')
             print('-'*50)
@@ -63,8 +76,11 @@ class ListMaker:
             content = self.cm.add_child()
             self.sm.update_content(content)
             self.start_edit()
-        elif key == 's':
+        elif key == 'w':
             self.store.write(self.cm.root)
+            self.cm.dirty = False
+        elif key == 'q':
+            sys.exit()
         elif key == 'e':
             self.start_edit()
         elif key == 'm':
@@ -116,14 +132,14 @@ class ListMaker:
     def start_edit(self):
         self.mode = Modes.EDIT
         edit_target = self.cm.get_selected_row()
-        self.sm.status_wnd.update_status('Edit Mode')
+        self.sm.status_wnd.update_status('Edit Mode', self.cm.dirty)
         self.sm.anno_wnd.update_selected(self.cm.selected_row, 'edit')
         self.sm.show_cursor(edit_target)
 
 
     def end_edit(self):
         self.mode = Modes.NORMAL
-        self.sm.status_wnd.update_status('Normal Mode')
+        self.sm.status_wnd.update_status('Normal Mode', self.cm.dirty)
         self.sm.anno_wnd.update_selected(self.cm.selected_row, 'normal')
         self.sm.hide_cursor()
 
@@ -150,7 +166,7 @@ class ListMaker:
         updating object mode state, updating status line.
         """
         self.mode = Modes.MOVE
-        self.sm.status_wnd.update_status('Move Mode')
+        self.sm.status_wnd.update_status('Move Mode', self.cm.dirty)
         self.sm.anno_wnd.update_move_item(self.cm.selected_row)
         self.state['move_row'] = self.cm.selected_row
 
@@ -167,7 +183,7 @@ class ListMaker:
             content = self.cm.move_node(self.state.pop('move_row'))
             self.sm.update_content(content)
         self.mode = Modes.NORMAL
-        self.sm.status_wnd.update_status('Normal Mode')
+        self.sm.status_wnd.update_status('Normal Mode', self.cm.dirty)
         self.sm.anno_wnd.clear_move()
 
 

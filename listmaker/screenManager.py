@@ -1,11 +1,24 @@
+"""
+Author: Vinayak Suley
+"""
 from typing import List, Tuple
+import curses
 from contentRow import ContentRow
 from childWindows import NavWnd, AnnoWnd, ContentWnd, StatusWnd
-import curses
-import sys
 
-class ScreenManager(object):
+class ScreenManager():
+    """
+    This class acts as the application's rendering interface. It is meant to encapsulate
+    most or all of the window handling, layout, design and other display related actions.
+    """
+
+
     def __init__(self):
+        # Initializing COLS & LINES so pylint will stop complaining.
+        # They get created by initscr, but the linting system is not
+        # advanced enough to detect that.
+        curses.COLS: int = 0
+        curses.LINES: int = 0
         curses.initscr()
         # Layout basics
         self.indent_size = 4
@@ -41,6 +54,13 @@ class ScreenManager(object):
 
 
     def update_content(self, content: Tuple[List[ContentRow], int]):
+        """
+        Update the main text content on screen.
+
+        Useful whenever the content has been changed by contentManager.
+        Call this method to refresh the list being displayed. Only
+        affects the display, not the content being stored.
+        """
         self.content_wnd.update_content(content[0])
 
 
@@ -62,4 +82,3 @@ class ScreenManager(object):
 
     def getch(self):
         return self.content_wnd.getch()
-

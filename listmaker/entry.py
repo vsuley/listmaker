@@ -26,19 +26,41 @@ class Entry(NodeMixin):
         self.curs += len(char)
 
 
-    def backspace(self):
+    def backspace(self) -> bool:
+        """
+        Executes a 'backspace' keystroke on entry's text.
+
+        Encapsulates the logic for whether the commands is valid at this
+        time or not.
+
+        Returns:
+            True if text was modified. 
+            False if command is invalid and no text was modified.
+        """
         if self.curs == 0:
-            return
+            return False
         self.name = self.name[:self.curs - 1] + self.name[self.curs:]
         self.curs -= 1
+        return True
 
 
-    def del_char(self):
+    def del_char(self) -> bool:
+        """
+        Executes a 'delete character' command on the entry's text.
+
+        Encapsualates logic for whether the command is valid at this time
+        or not.
+
+        Returns:
+            'True' if text was modified.
+            'False' if command is invalid and text was not modified.
+        """
         if len(self.name) == 0:
-            return
+            return False
         self.name = self.name[:self.curs] + self.name[self.curs + 1:]
         if self.curs > len(self.name) - 1:
             self.curs = len(self.name)
+        return True
 
     def curs_right(self):
         if self.curs == len(self.name) - 1:

@@ -1,3 +1,7 @@
+"""
+Author: Vinayak Suley
+URL: https://github.com/vsuley/listmaker
+"""
 from typing import List, Tuple
 from anytree import RenderTree
 from entry import Entry
@@ -11,13 +15,16 @@ class ContentManager:
 
     def __init__(self, store: StorageManager):
         self.root = store.read()
-        if(self.root == None):
+        self.dirty = False
+        if self.root is None:
             self.root = Entry('root', None)
             a = Entry('Topic 01', self.root)
             b = Entry('Subtopic', a)
             c = Entry('Topic 02', self.root)
+            self.dirty = True
         if(self.root.children == None):
             a = Entry(' ', self.root)
+            self.dirty = True
         self.selected_row = 0
         self.render()
 
@@ -49,6 +56,7 @@ class ContentManager:
         cr = self.content_list[self.selected_row]
         e = cr.entry
         child = Entry('', e)
+        self.dirty = True
         self.render()
         self.selected_row = self.find_entry_pos(child)       
         return (self.content_list, self.selected_row)
@@ -60,6 +68,7 @@ class ContentManager:
         if e != self.root:
             p = e.parent
             child = Entry('', p)
+            self.dirty = True
             self.render()
             self.selected_row = self.find_entry_pos(child)       
         return (self.content_list, self.selected_row)
@@ -81,6 +90,7 @@ class ContentManager:
             self.selected_row -= 1
         # The following line removes the node
         e.parent = None
+        self.dirty = True
         self.render()
         return (self.content_list, self.selected_row)
 
@@ -108,6 +118,7 @@ class ContentManager:
         index = child_list.index(sel_node)
         child_list.insert(index, move_node)
         sel_node.parent.children = child_list
+        self.dirty = True
         self.render()
         return (self.content_list, self.selected_row)
 
@@ -132,6 +143,7 @@ class ContentManager:
             return (self.content_list, self.selected_row)
         grandparent = p.parent
         e.parent = grandparent
+        self.dirty = True
         self.render()
         return (self.content_list, self.selected_row)
 
@@ -159,6 +171,7 @@ class ContentManager:
             return (self.content_list, self.selected_row)
         grandparent = p.parent
         e.parent = grandparent
+        self.dirty = True
         self.render()
         return (self.content_list, self.selected_row)
 
@@ -178,12 +191,14 @@ class ContentManager:
 
 
     def backspace(self) -> Tuple[int, ContentRow]:
-        self.content_list[self.selected_row].entry.backspace()
+        if self.content_list[self.selected_row].entry.backspace():
+            self.dirty = True
         return (self.selected_row, self.content_list[self.selected_row])
 
 
     def del_char(self) -> Tuple[int, ContentRow]:
-        self.content_list[self.selected_row].entry.del_char()
+        if self.content_list[self.selected_row].entry.del_char():
+            self.dirty = True
         return (self.selected_row, self.content_list[self.selected_row])
 
 

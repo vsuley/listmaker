@@ -1,3 +1,7 @@
+"""
+Author: Vinayak Suley
+URL: https://github.com/vsuley/listmaker
+"""
 from typing import List, Tuple
 from contentRow import ContentRow
 from entry import Entry
@@ -6,6 +10,9 @@ import sys
 
 
 class AnnoWnd:
+    """
+    Class to help manage displaying of per-row annotations.
+    """
     def __init__(self, lines: int, cols: int, begin_y: int, begin_x: int) -> None:
         self.wnd = curses.newwin(lines, cols, begin_y, begin_x)
         self.wnd.keypad(True)
@@ -20,7 +27,8 @@ class AnnoWnd:
         self.move_dest_row = None
         self.move_item_row = None
         self.collapse_mrk_col = 1
-    
+
+
     def update_selected(self, sel_row: int, mode: str) -> None:
         """
         This method paints a pointer that helps to show the user which row the
@@ -87,6 +95,9 @@ class AnnoWnd:
 
 
 class ContentWnd:
+    """
+    Class to help manage display of list content.
+    """
 
     def __init__(self, lines: int, cols: int, begin_y: int, begin_x: int) -> None:
         self.wnd = curses.newwin(lines, cols, begin_y, begin_x)
@@ -132,6 +143,11 @@ class ContentWnd:
 
 
 class StatusWnd:
+    """
+    Class to help manage the display of status information in a bar below the content.
+    """
+
+
     def __init__(self, lines: int, cols: int, begin_y: int, begin_x: int) -> None:
         self.wnd = curses.newwin(lines, cols, begin_y, begin_x)
         self.wnd.addstr(0, 0, '-------------------------------------------------------------')
@@ -139,11 +155,30 @@ class StatusWnd:
         self.wnd.refresh()
 
 
-    def update_status(self, status: str) -> None:
+    def update_status(self, status: str, dirty: bool) -> None:
+        """
+        Updates status information in status sub-window.
+
+        Mode is on the left hand side. Dirty status is on right hand side.
+        """
         self.wnd.clear()
+
+        # Mode information
         self.wnd.addstr(1, 2, status)
+
+        # Dirty information
+        start_pos: int = self.wnd.getmaxyx()[1] - 2 - len('DIRTY')
+        if dirty:
+            self.wnd.addstr(1, start_pos, 'DIRTY')
+
         self.wnd.border()
         self.wnd.refresh()
+
+
+    def update_dirty(self, value: bool) -> None:
+        """
+        Displays dirty information on the right side of status bar.
+        """
 
 class NavWnd:
     def __init__(self, lines: int, cols: int, begin_y: int, begin_x: int) -> None:
